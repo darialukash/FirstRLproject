@@ -1,5 +1,6 @@
 import gym
 import numpy as np
+import matplotlib.pyplot as plt
 
 env = gym.make("MountainCar-v0")
 env.reset()
@@ -27,6 +28,9 @@ q_table = np.random.uniform(low=-2, high=0,
                             size=(DISCRETE_OS_SIZE
                                   + [env.action_space.n]))
 
+ep_rewards = []
+aggr_ep_rewards = {'ep': [], 'avg': [], 'min': [], 'max': []}
+
 
 def get_discrete_state(state):
     discrete_state = (state - env.observation_space.low) / discrete_os_win_size
@@ -34,6 +38,7 @@ def get_discrete_state(state):
 
 
 for episode in range(EPISODES):
+    episode_reward = 0
 
     if episode % SHOW_EVERY == 0:
         print(episode)
@@ -52,8 +57,14 @@ for episode in range(EPISODES):
     done = False
 
     while not done:
-        action = np.argmax(q_table[discrete_state])
+
+        if np.random.random() > epsilon:
+            action = np.argmax(q_table[discrete_state])
+        else:
+            action = np.random.randint(0, env.action_space.n)
+
         new_state, reward, done, _ = env.step(action)  # new_state is pos and velocity
+        episode_reward += reward
         new_discrete_state = get_discrete_state(new_state)
         # print(reward, new_state)
         if render:
@@ -73,4 +84,25 @@ for episode in range(EPISODES):
     if END_EPSILON_DECAYING >= episode >= START_EPSILON_DECAYING:
         epsilon -= epsilon_decay_value
 
-    env.close()
+    ep_rewards.append(episode_reward)
+
+    if not episode % 10:
+        np.save("qtables/{}-qtable.npy".format(q_table))
+
+    if not episode % SHOW_EVERY:
+        average_reward = sum(ep_rewards[-SHOW_EVERY:]) / len(ep_rewards[-SHOW_EVERY:])
+        aggr_ep_rewards['ep'].append(episode)
+        aggr_ep_rewards['avg'].append(average_reward)
+        aggr_ep_rewards['min'].append(min(ep_rewards[-SHOW_EVERY:]))
+        aggr_ep_rewards['max'].append(max(ep_rewards[-SHOW_EVERY:]))
+
+        print("Episode: {} avg: {} min: {} max: {}".format(
+            episode, average_reward, min(ep_rewards[-SHOW_EVERY:]),
+            max(ep_rewards[-SHOW_EVERY:])))
+
+env.close()
+plt.plot(aggr_ep_rewards['ep'], aggr_ep_rewards['avg'], label='Average episode rewards')
+plt.plot(aggr_ep_rewards['ep'], aggr_ep_rewards['min'], label='Min episode reward')
+plt.plot(aggr_ep_rewards['ep'], aggr_ep_rewards['max'], label='Max episode reward')
+plt.legend(loc=4)
+plt.show()
