@@ -149,7 +149,7 @@ if not os.path.isdir("models"):
 
 agent = DQNAgent()
 
-for episode in tqdm(range(1, EPISODES + 1), ascii=True, unit="episodes"):
+for episode in tqdm(range(1, EPISODES + 1), unit="episodes"):
     agent.tensorboard.step = episode
 
     episode_reward = 0
