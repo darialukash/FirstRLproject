@@ -17,7 +17,7 @@ FOOD_REWARD = 25
 epsilon = 0.9
 EPS_DECAY = 0.9998
 
-SHOW_EVERY = 3000
+SHOW_EVERY = 100
 
 start_q_table = "qtables/qtable-1570196127.pickle"  # None  # or filename if I need to train from some point
 
@@ -112,8 +112,8 @@ for episode in range(HM_EPISODES):
         player.action(action)
 
         ####
-        # enemy.move()
-        # food.move()
+        enemy.move()
+        food.move()
 
         if player.x == enemy.x and player.y == enemy.y:
             reward = - ENEMY_PENALTY
